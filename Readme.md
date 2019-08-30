@@ -4,6 +4,10 @@ This tiny API provides subscribing and unsubscribing of users using the [go-news
 
 ## Routes
 
+### GET /subscribers
+
+Responds with all subscribers for a `newsletter`, provided in the query-string parameter. This route requires the __API_TOKEN__.
+
 ### POST /subscribe
 
 Accepts a form body with a `newsletter` name and subscriber and `email`.
@@ -18,9 +22,20 @@ Requires the `newsletter` and `token` query-string parameters. The token must be
 - Deploy this app however you prefer, you could use [Up](https://github.com/apex/up) for example
 - Define the required environment variables:
     - __TOKEN_SECRET__: The secret used for signing unsubscribe tokens
+    - __API_TOKEN__: The API token used to secure sensitive routes (`GET /subscribers`)
     - __SUBSCRIBE_REDIRECT_URL__: The redirect URL used for a successful subscription (thank you page)
     - __UNSUBSCRIBE_REDIRECT_URL__: The redirect URL used for a successful unsubscribe (bye bye page)
     - __DYNAMO_TABLE__: An optional table name, defaults to "news"
+
+## Auth
+
+The __API_TOKEN__ is used to restrict access to sensitive routes. You can specify it as the Basic Auth password, no username is necessary, for example:
+
+```
+$ export API_TOKEN=hello
+$ go run main.go &
+$ curl -u :slothy localhost:3000/subscribers?newsletter=blog
+```
 
 ---
 

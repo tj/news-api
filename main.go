@@ -15,6 +15,9 @@ import (
 // secret for token signing.
 var secret = env.Get("TOKEN_SECRET")
 
+// apiToken for authentication.
+var apiToken = env.Get("API_TOKEN")
+
 // subscribeURL is the redirect URL used after a subscribe.
 var subscribeURL = env.Get("SUBSCRIBE_REDIRECT_URL")
 
@@ -28,11 +31,48 @@ var newsletters = news.New(env.GetDefault("DYNAMO_TABLE", "news"))
 var port = env.GetDefault("PORT", "3000")
 
 func main() {
+	http.HandleFunc("/subscribers", auth(subscribers))
 	http.HandleFunc("/subscribe", subscribe)
 	http.HandleFunc("/unsubscribe", unsubscribe)
 	http.HandleFunc("/_health", health)
 	log.Printf("Listening on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+// auth middleware.
+func auth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, pass, ok := r.BasicAuth()
+		if !ok {
+			response.Unauthorized(w, "Route requires api token")
+			return
+		}
+
+		if pass != apiToken {
+			response.Forbidden(w, "Invalid api token")
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
+// subscribers route.
+func subscribers(w http.ResponseWriter, r *http.Request) {
+	newsletter := r.URL.Query().Get("newsletter")
+
+	if newsletter == "" {
+		response.BadRequest(w, "The newsletter query-string parameter is required")
+		return
+	}
+
+	emails, err := newsletters.GetSubscribers(newsletter)
+	if err != nil {
+		log.Printf("error fetching subscribers: %v\n", err)
+		return
+	}
+
+	response.OK(w, emails)
 }
 
 // subscribe route.
