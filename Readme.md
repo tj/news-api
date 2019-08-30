@@ -6,7 +6,7 @@ This tiny API provides subscribing and unsubscribing of users using the [go-news
 
 ### GET /subscribers
 
-Responds with all subscribers for a `newsletter`, provided in the query-string parameter. This route requires the __API_TOKEN__.
+Responds with all subscribers for a `newsletter`, provided in the query-string parameter.
 
 ### POST /subscribe
 
